@@ -4,7 +4,7 @@
 
 Download source from [Kaggle](https://www.kaggle.com/jacobvs/ddos-attack-network-logs?select=final-dataset-short.arff)
 
-or from copy link `https://www.kaggle.com/jacobvs/ddos-attack-network-logs?select=final-dataset-short.arff`
+or copy link `https://www.kaggle.com/jacobvs/ddos-attack-network-logs?select=final-dataset-short.arff`
 
 ### Extract Dataset
 
