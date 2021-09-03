@@ -8,7 +8,7 @@ or copy link `https://www.kaggle.com/jacobvs/ddos-attack-network-logs?select=fin
 
 ### Extract Dataset
 
-Install and use python to run the file
+Install and use python to run the file,
 set the data used in each class on the row `maxLabelIndex = [1000,1000,1000,1000,1000]`, then run the python file
 
 ```js
