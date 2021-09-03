@@ -1,0 +1,30 @@
+{
+  "name": "knn-network-attack",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.13.6",
+    "@nuxtjs/proxy": "^2.1.0",
+    "@nuxtjs/pwa": "^3.3.5",
+    "apexcharts": "^3.28.1",
+    "bootstrap": "^4.6.0",
+    "bootstrap-vue": "^2.21.2",
+    "core-js": "^3.15.1",
+    "csr-matrix": "^2.0.0",
+    "dateformat": "^4.5.1",
+    "md5": "^2.3.0",
+    "nuxt": "^2.15.7",
+    "train-test-split": "^1.0.0",
+    "transformation-matrix": "^2.9.0",
+    "transformersjs": "^1.0.0",
+    "vue-apexcharts": "^1.6.2",
+    "vue-confirm-dialog": "^1.0.2"
+  },
+  "devDependencies": {}
+}
