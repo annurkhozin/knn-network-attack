@@ -67,20 +67,20 @@
         </b-col>
       </b-row>
       <b-row align-h="center" class="mt-4" v-show="activeStep == 3">
+        <b-row class="mt-3 mb-3" v-if="isBusy">
+          <b-col align-h="center" class="text-center">
+            <div class="text-success my-2">
+              <b-spinner class="align-middle"></b-spinner>
+              <strong>Loading...</strong>
+            </div>
+          </b-col>
+        </b-row>
         <b-col class="col-md-12">
           <Visualisasi
             v-if="form.akurasi > 0"
             :data="form"
-            :chartSeries="chartSeries"
+            :chartSeries="dataset.series"
           />
-        </b-col>
-      </b-row>
-      <b-row class="mt-3 mb-3" v-if="isBusy">
-        <b-col align-h="center" class="text-center">
-          <div class="text-success my-2">
-            <b-spinner class="align-middle"></b-spinner>
-            <strong>Loading...</strong>
-          </div>
         </b-col>
       </b-row>
     </b-card>
@@ -127,17 +127,16 @@ export default {
         selected: [],
         info: []
       },
-      chartSeries: [],
       tooltipsShow: true,
       tampilkanData: false,
       prosesHitung: false,
       dataset: {
-        raw: [],
         latih: [],
         uji: [],
         normalisasi_latih: [],
         normalisasi_uji: [],
-        hasil_uji: []
+        hasil_uji: [],
+        series: []
       },
       totalRows: 0,
       processedSteps: [
@@ -156,21 +155,80 @@ export default {
   methods: {
     async getDataTesting() {
       this.dataset.raw = [];
+      const id = this.$route.params.id;
+      await this.$axios.get(`/api/testing/_doc/${id}`).then(resp => {
+        const respData = resp.data;
+        this.form = respData._source.form;
+        this.feature = JSON.parse(respData._source.feature);
+        // this.dataset = JSON.parse(respData._source.dataset);
+        // this.chartSeries = JSON.parse(respData._source.chartSeries);
+      });
 
-      const respDataset = await this.$axios
-        .get(`/api/testing/_doc/${this.$route.params.id}`)
+      const data = {
+        size: 10000
+      };
+
+      await this.$axios
+        .post(`/api/testing_latih_${id}/_search`, data)
         .then(resp => {
           const respData = resp.data;
-          this.form = respData._source.form;
-          this.feature = JSON.parse(respData._source.feature);
-          this.dataset = JSON.parse(respData._source.dataset);
-          this.chartSeries = JSON.parse(respData._source.chartSeries);
-          this.isBusy = false;
-        })
-        .catch(error => {
-          this.totalRows = 0;
-          this.isBusy = false;
+          const respDataset = respData.hits.hits;
+          respDataset.forEach(key => {
+            this.dataset.latih.push(key._source);
+          });
         });
+
+      await this.$axios
+        .post(`/api/testing_uji_${id}/_search`, data)
+        .then(resp => {
+          const respData = resp.data;
+          const respDataset = respData.hits.hits;
+          respDataset.forEach(key => {
+            this.dataset.uji.push(key._source);
+          });
+        });
+
+      await this.$axios
+        .post(`/api/testing_normalisasi_latih_${id}/_search`, data)
+        .then(resp => {
+          const respData = resp.data;
+          const respDataset = respData.hits.hits;
+          respDataset.forEach(key => {
+            this.dataset.normalisasi_latih.push(key._source);
+          });
+        });
+
+      await this.$axios
+        .post(`/api/testing_normalisasi_uji_${id}/_search`, data)
+        .then(resp => {
+          const respData = resp.data;
+          const respDataset = respData.hits.hits;
+          respDataset.forEach(key => {
+            this.dataset.normalisasi_uji.push(key._source);
+          });
+        });
+
+      await this.$axios
+        .post(`/api/testing_hasil_uji_${id}/_search`, data)
+        .then(resp => {
+          const respData = resp.data;
+          const respDataset = respData.hits.hits;
+          respDataset.forEach(key => {
+            this.dataset.hasil_uji.push(key._source);
+          });
+        });
+
+      await this.$axios
+        .post(`/api/testing_series_${id}/_search`, data)
+        .then(resp => {
+          const respData = resp.data;
+          const respDataset = respData.hits.hits;
+          respDataset.forEach(key => {
+            this.dataset.series.push(key._source);
+          });
+        });
+
+      this.isBusy = false;
     },
     async showStep(index) {
       this.activeStep = index;

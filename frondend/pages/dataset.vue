@@ -262,7 +262,7 @@ export default {
                 var i,
                   j,
                   temporary,
-                  chunk = 100;
+                  chunk = 200;
                 for (i = 0, j = rowData.length; i < j; i += chunk) {
                   this.proses = i;
                   temporary = rowData.slice(i, i + chunk);
@@ -281,7 +281,6 @@ export default {
                       "Content-type": "application/json"
                     }
                   });
-
                   this.proses = j;
                 }
 

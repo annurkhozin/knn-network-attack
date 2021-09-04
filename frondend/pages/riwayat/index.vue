@@ -221,9 +221,10 @@ export default {
           respDataset.forEach(key => {
             const tanggal_uji = dateFormat(
               key._source.created_at,
-              "dd mmm yyyy h:MM"
+              "dd mmm yyyy HH:MM"
             );
             const data = {
+              _id: key._id,
               tanggal_uji: tanggal_uji,
               data_latih: key._source.form.total_data_latih,
               data_uji: key._source.form.total_data_uji,
@@ -247,7 +248,7 @@ export default {
       this.isBusySubmit = false;
       this.selectedField =
         this.riwayatRows.length > 0
-          ? Object.keys(this.riwayatRows[0]).slice(0, 5)
+          ? Object.keys(this.riwayatRows[0]).slice(0, 6)
           : [];
       if (this.riwayatRows.length > 0) {
         if (Object.keys(this.riwayatRows[0]).includes("PKT_CLASS")) {
@@ -256,7 +257,7 @@ export default {
       }
       this.allFields =
         this.riwayatRows.length > 0
-          ? Object.keys(this.riwayatRows[0]).slice(0, 5)
+          ? Object.keys(this.riwayatRows[0]).slice(0, 6)
           : [];
       this.columnView(this.selectedField);
     },
@@ -292,13 +293,13 @@ export default {
           no: "Tidak",
           yes: "Ya, Hapus"
         },
-        callback: confirm => {
+        callback: async confirm => {
           if (confirm) {
-            this.$axios.delete(`/api/testing/_doc/${id}`).then(() => {
-              setTimeout(() => {
-                this.getRiwayat();
-              }, 1000);
-            });
+            await this.$axios.delete(`/api/testing/_doc/${id}`);
+            await this.$axios.delete(`/api/*_${id}`);
+            setTimeout(() => {
+              this.getRiwayat();
+            }, 1000);
           }
         }
       });

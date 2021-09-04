@@ -10,20 +10,25 @@
         class="mx-2 flex-shrink-0 avatar gd-success"
         style="width: 50px; height: 50px"
       >
-        <span v-if="!photo_user_login && nama_user_login">
-          {{ nama_user_login.substring(0, 1).toUpperCase() }}
+        <span
+          v-if="
+            !this.$store.state.user.photo && this.$store.state.user.fullname
+          "
+        >
+          {{ this.$store.state.user.fullname.substring(0, 1).toUpperCase() }}
         </span>
         <img
-          v-if="photo_user_login"
-          :src="photo_user_login"
-          :alt="nama_user_login"
+          v-if="this.$store.state.user.photo"
+          :src="this.$store.state.user.photo"
+          :alt="this.$store.state.user.fullname"
           class="rounded-circle mx-2 flex-shrink-0"
           style="width: 50px; height: 50px"
         />
       </span>
       <span class="str"
-        >{{ nama_user_login }} <br /><span style="font-size: 0.7rem"
-          >Administrator</span
+        >{{ this.$store.state.user.fullname }} <br /><span
+          style="font-size: 0.7rem"
+          >@{{ this.$store.state.user.username }}</span
         ></span
       >
     </div>
@@ -81,9 +86,7 @@ export default {
     return {
       searchMenu: "",
       isMobile: false,
-      currentPath: this.$route.name,
-      nama_user_login: this.$store.state.user.fullname,
-      photo_user_login: this.$store.state.user.photo
+      currentPath: this.$route.name
     };
   },
   computed: {

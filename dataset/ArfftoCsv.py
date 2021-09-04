@@ -17,7 +17,7 @@ def toCsv(text,name):
     lengthData = 0
     all_data = False
     labels = ["Normal\n","UDP-Flood\n","Smurf\n","SIDDOS\n","HTTP-FLOOD\n"]
-    maxLabelIndex = [1000,1000,1000,1000,1000]
+    maxLabelIndex = [200,200,200,200,200]
     countLabelIndex = [0,0,0,0,0]
     boolLabelIndex = [False,False,False,False,False]
 

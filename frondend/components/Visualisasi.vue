@@ -125,41 +125,57 @@ export default {
     };
   },
   created() {
-    this.addSeries();
+    this.viewSeries();
   },
   methods: {
-    async addSeries() {
+    async viewSeries() {
       this.series = [];
-      const rows = [...this.chartSeries];
+      const rows = this.chartSeries;
       for (let a in rows) {
-        const data = [];
         const row = rows[a];
-        for (let b in row.data) {
-          if (this.trainData && row.type[b] == 1) {
-            data.push(row.data[b]);
-          }
-          if (this.testData && row.type[b] == 0) {
-            data.push(row.data[b]);
+        if (this.trainData && row.type == 1) {
+          this.addSeries(this.series, row.pkt_class, [
+            row.series.x,
+            row.series.y
+          ]);
+        }
+        if (this.testData && row.type == 0) {
+          this.addSeries(this.series, row.pkt_class, [
+            row.series.x,
+            row.series.y
+          ]);
+        }
+      }
+    },
+    async addSeries(arr, name, data) {
+      const found = arr.some(el => el.name === name);
+      if (found) {
+        for (let i in arr) {
+          const el = arr[i];
+          if (el.name === name) {
+            el.data.push(data);
+            break;
           }
         }
-        this.series.push({ name: row.name, data: data });
+      } else {
+        arr.push({ name: name, data: [data] });
       }
     }
   },
   watch: {
     chartSeries: {
       handler: function(value) {
-        this.addSeries();
+        this.viewSeries();
       }
     },
     trainData: {
       handler: function(value) {
-        this.addSeries();
+        this.viewSeries();
       }
     },
     testData: {
       handler: function(value) {
-        this.addSeries();
+        this.viewSeries();
       }
     }
   }

@@ -45,24 +45,31 @@
                     class="avatar gd-success"
                     style="width: 24px; height: 24px; font-size: 16px"
                   >
-                    <span v-if="!photo_user && nama_user" style="color: #fff">
-                      {{ nama_user.substring(0, 1).toUpperCase() }}
+                    <span
+                      v-if="
+                        !$store.state.user.photo && $store.state.user.fullname
+                      "
+                      style="color: #fff"
+                    >
+                      {{
+                        $store.state.user.fullname.substring(0, 1).toUpperCase()
+                      }}
                     </span>
                     <img
-                      v-if="photo_user"
-                      :src="photo_user"
-                      :alt="nama_user"
+                      v-if="$store.state.user.photo"
+                      :src="$store.state.user.photo"
+                      :alt="$store.state.user.fullname"
                       class="rounded-circle mx-2 flex-shrink-0"
                       style="width: 32px; height: 32px"
                     />
                   </div>
                   <div class="str align-self-center">
-                    &nbsp;&nbsp;{{ nama_user }}
+                    &nbsp;&nbsp;{{ $store.state.user.fullname }}
                   </div>
                 </div>
               </template>
 
-              <b-dropdown-item to="profile"
+              <b-dropdown-item @click="updateProfile"
                 ><b-icon-person scale="0.8"></b-icon-person>
                 Profile</b-dropdown-item
               >
@@ -118,6 +125,90 @@
         </b-nav-item-dropdown>
       </b-navbar-nav>
     </b-navbar>
+    <b-modal
+      id="modal-prevent-closing"
+      ref="modal"
+      size="sm"
+      title="Data Pengguna"
+      @hidden="resetModal"
+      @ok="handleOk"
+    >
+      <form ref="form" @submit.stop.prevent="handleSubmit">
+        <b-alert :show="error === '' ? false : true" variant="danger" fade>{{
+          error
+        }}</b-alert>
+        <b-input-group class="mb-4" size="sm">
+          <b-input-group-append is-text>
+            <b-icon-person class="icon"></b-icon-person>
+          </b-input-group-append>
+          <b-form-input
+            ref="fullname"
+            v-model="form.fullname"
+            placeholder="Nama lengkap"
+            style="border-left: 0"
+            required
+          ></b-form-input>
+        </b-input-group>
+        <b-input-group class="mb-4" size="sm">
+          <b-input-group-append is-text>
+            <b-icon-key class="icon"></b-icon-key>
+          </b-input-group-append>
+          <b-form-input
+            ref="username"
+            v-model="form.username"
+            placeholder="Username"
+            style="border-left: 0"
+            required
+          ></b-form-input>
+        </b-input-group>
+        <b-input-group class="mb-4" size="sm">
+          <b-input-group-append is-text>
+            <b-icon-lock class="icon"></b-icon-lock>
+          </b-input-group-append>
+          <b-form-input
+            ref="password"
+            v-model="form.password"
+            :type="passwordFieldType"
+            placeholder="Password"
+            style="border-left: 0"
+            class="border-right-0"
+            required
+          ></b-form-input>
+          <span class="input-group-append">
+            <div
+              class="input-group-text bg-transparent"
+              type="button"
+              @click="btnPassword"
+            >
+              <b-icon-eye-slash
+                v-if="!showPassword"
+                scale="0.9"
+                class="icon"
+              ></b-icon-eye-slash>
+              <b-icon-eye
+                v-if="showPassword"
+                scale="0.9"
+                class="icon"
+              ></b-icon-eye>
+            </div>
+          </span>
+        </b-input-group>
+        <b-input-group class="mb-4" size="sm">
+          <b-input-group-append is-text>
+            <b-icon-image class="icon"></b-icon-image>
+          </b-input-group-append>
+          <b-form-file
+            ref="photo"
+            size="sm"
+            accept="image/jpeg, image/png, image/jpg"
+            placeholder="Photo"
+            @change="base64File"
+            style="border-left: 0"
+            required
+          ></b-form-file>
+        </b-input-group>
+      </form>
+    </b-modal>
   </div>
 </template>
 
@@ -135,9 +226,10 @@ export default {
       showNavbar: true,
       lastScrollPosition: 0,
       scrollValue: 0,
-      nama_user: this.$store.state.user.fullname,
-      jabatan_user: this.$store.state.user.jabatan,
-      photo_user: this.$store.state.user.photo
+      form: {},
+      error: "",
+      showPassword: false,
+      passwordFieldType: "password"
     };
   },
 
@@ -191,6 +283,129 @@ export default {
       }
       this.showNavbar = window.pageYOffset < this.lastScrollPosition;
       this.lastScrollPosition = window.pageYOffset;
+    },
+    async updateProfile() {
+      this.form = {
+        _id: this.$store.state.token_id,
+        fullname: this.$store.state.user.fullname,
+        username: this.$store.state.user.username
+      };
+      this.$bvModal.show("modal-prevent-closing");
+    },
+    resetModal() {
+      this.form = {};
+      this.error = "";
+    },
+    handleOk(bvModalEvt) {
+      bvModalEvt.preventDefault();
+      this.handleSubmit();
+    },
+    async handleSubmit() {
+      if (!this.form.fullname) {
+        this.$refs.fullname.$el.focus();
+        this.error = "Nama lengkap wajid diisi";
+      } else if (!this.form.username) {
+        this.$refs.username.$el.focus();
+        this.error = "Username wajid diisi";
+      } else if (!this.form.password && !this.form._id) {
+        this.$refs.password.$el.focus();
+        this.error = "Password wajid diisi";
+      } else if (!this.form.photo && !this.form._id) {
+        this.$refs.photo.$el.focus();
+        this.error = "Photo wajid diisi";
+      } else {
+        this.isBusySubmit = true;
+        const data = {
+          fullname: this.form.fullname,
+          username: this.form.username
+        };
+        if (this.form.password) {
+          data.password = md5(this.form.password);
+        }
+        if (this.form.photo) {
+          data.photo = this.form.photo;
+        }
+        const headers = {
+          "Content-Type": "application/json"
+        };
+        const _id = this.form._id;
+        if (_id) {
+          const doc = {
+            doc: data
+          };
+          await this.$axios
+            .post(`/api/users/_update/${_id}`, doc, {
+              headers: headers
+            })
+            .then(resp => {
+              this.isBusySubmit = false;
+              this.$confirm({
+                title: "⚠ Success",
+                message: "Pengguna berhasil diperbarui",
+                button: {
+                  yes: "Ok"
+                },
+                callback: confirm => {
+                  this.$bvModal.hide("modal-prevent-closing");
+                  this.getProfile();
+                }
+              });
+            })
+            .catch(error => {
+              if (error.response) {
+                this.isBusySubmit = false;
+                this.$confirm({
+                  title: "⛔ Error",
+                  message: "Gagal menyimpan data",
+                  button: {
+                    yes: "Ok"
+                  }
+                });
+              }
+            });
+        }
+      }
+    },
+    base64File: function() {
+      const file = document.querySelector("input[type=file]").files[0];
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        this.form.photo = reader.result;
+      };
+      reader.readAsDataURL(file);
+      // console.log(file);
+    },
+    btnPassword() {
+      if (this.showPassword === true) {
+        this.showPassword = false;
+        this.passwordFieldType = "password";
+      } else {
+        this.showPassword = true;
+        this.passwordFieldType = "text";
+      }
+    },
+    async getProfile() {
+      var token = this.$store.state.token_id;
+      if (token) {
+        await this.$axios
+          .get(`/api/users/_doc/${token}`)
+          .then(resp => {
+            const found = resp.data.found;
+            this.busy = false;
+            if (found) {
+              this.SET_lOGGED_IN(true);
+              this.SET_TOKEN_ID(resp.data._id);
+              this.SET_USER(resp.data._source);
+            } else {
+              this.SET_TOKEN_ID(null);
+            }
+          })
+          .catch(error => {
+            this.SET_lOGGED_IN(false);
+            this.SET_TOKEN_ID(null);
+          });
+      }
     }
   }
 };

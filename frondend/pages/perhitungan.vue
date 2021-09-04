@@ -195,7 +195,7 @@
           <Visualisasi
             v-if="form.akurasi > 0"
             :data="form"
-            :chartSeries="chartSeries"
+            :chartSeries="dataset.series"
           />
         </b-col>
       </b-row>
@@ -237,7 +237,6 @@ export default {
         selected: [],
         info: []
       },
-      chartSeries: [],
       tooltipsShow: true,
       tampilkanData: false,
       prosesHitung: false,
@@ -247,7 +246,8 @@ export default {
         uji: [],
         normalisasi_latih: [],
         normalisasi_uji: [],
-        hasil_uji: []
+        hasil_uji: [],
+        series: []
       },
       totalRows: 0,
       steps: ["Dataset", "Normalisasi", "Klasifikasi k-NN", "Visualisasi"],
@@ -406,7 +406,7 @@ export default {
     },
 
     async normalisasiData() {
-      this.chartSeries = [];
+      this.dataset.series = [];
       // get koleksi data, min & max
       this.feature.info = await this.infoDataset(
         this.dataset.latih,
@@ -488,37 +488,29 @@ export default {
             v = ((v - min) / (max - min)) * (new_max - new_min) + new_min;
             datasetRow[key] = v;
             if (getIndexKey % 2 !== 0) {
-              datasetRowTest[0] += datasetRowTest[0] + v;
+              datasetRowTest[0] += datasetRowTest[0] + Math.sin(v);
             } else {
-              datasetRowTest[1] += datasetRowTest[1] + v;
+              datasetRowTest[1] += datasetRowTest[1] + Math.sin(v);
             }
           }
         }
         datasetRowTest[0] = datasetRowTest[0];
         datasetRowTest[1] = datasetRowTest[1];
 
-        this.addSeries(this.chartSeries, row.PKT_CLASS, datasetRowTest, type);
+        this.dataset.series.push({
+          index_data: i,
+          pkt_class: row.PKT_CLASS,
+          series: {
+            x: datasetRowTest[0],
+            y: datasetRowTest[1]
+          },
+          type: type
+        });
+
         datasetRows.push(datasetRow);
       }
 
       return datasetRows;
-    },
-
-    async addSeries(arr, name, data, type) {
-      const found = arr.some(el => el.name === name);
-      if (found) {
-        for (let i in arr) {
-          const el = arr[i];
-          if (el.name === name) {
-            el.data.push(data);
-            el.type.push(type);
-            break;
-          }
-        }
-      } else {
-        arr.push({ name: name, data: [data], type: [type] });
-      }
-      return arr;
     },
 
     async klasifikasikNN() {
@@ -655,6 +647,15 @@ export default {
       this.activeStep = index;
     },
 
+    async toBulkData(index, data) {
+      const json_data = data.flatMap(doc => [{ index: index }, doc]);
+      return Object.keys(json_data)
+        .map(function(k) {
+          return JSON.stringify(json_data[k]);
+        })
+        .join("\n");
+    },
+
     async simpanPengujian() {
       await this.$confirm({
         title: "⚠ Simpan Hasil Pengujian",
@@ -665,109 +666,75 @@ export default {
         },
         callback: async confirm => {
           if (confirm) {
-            this.isBusySubmit = true;
-            this.isBusy = true;
-            const data = [
+            this.prosesHitung = true;
+
+            const time = new Date().getTime();
+            var data = [
               {
                 form: this.form,
-                chartSeries: JSON.stringify(this.chartSeries),
-                dataset: JSON.stringify(this.dataset),
                 feature: JSON.stringify(this.feature),
                 created_at: new Date()
               }
             ];
 
-            const json_data = data.flatMap(doc => [
-              { index: { _index: "testing" } },
-              doc
-            ]);
-            var bulk_data = Object.keys(json_data)
-              .map(function(k) {
-                return JSON.stringify(json_data[k]);
-              })
-              .join("\n");
+            var bulk_data = await this.toBulkData(
+              { _index: `testing`, _id: time },
+              data
+            );
+            await this.$axios.post(`/api/_bulk`, `${bulk_data}\n`, {
+              headers: {
+                "Content-type": "application/json"
+              }
+            });
 
-            await this.$axios
-              .post(`/api/_bulk`, `${bulk_data}\n`, {
-                headers: {
-                  "Content-type": "application/json"
-                }
-              })
-              .then(() => {
-                this.$confirm({
-                  title: "🥳 Sukses",
-                  message: "Pengujian berhasil disimpan",
-                  button: {
-                    yes: "Ok"
-                  }
-                });
-                this.stepStatus = [false, false, false, false];
-                this.processedSteps = [];
-                this.tampilkanData = false;
-                this.prosesHitung = false;
-              });
+            for (let key in this.dataset) {
+              if (key == "raw") continue;
+              const rowData = this.dataset[key];
+              var i,
+                j,
+                tmp,
+                chunk = 100;
+              for (i = 0, j = rowData.length; i < j; i += chunk) {
+                this.proses = i;
+                tmp = rowData.slice(i, i + chunk);
+                const bulk_data = await this.toBulkData(
+                  { _index: `testing_${key}_${time}` },
+                  tmp
+                );
 
-            // const id = new Date().getTime();
-            // var data = {
-            //   doc: {
-            //     form: this.form,
-            //     created_at: new Date()
-            //   }
-            // };
-            // await this.$axios.post(`/api/testing/_doc/${id}`, data, {
-            //   headers: {
-            //     "Content-type": "application/json"
-            //   }
-            // });
-            // data = {
-            //   doc: {
-            //     feature: JSON.stringify(this.feature)
-            //   }
-            // };
-            // await this.$axios.post(`/api/testing/_update/${id}`, data, {
-            //   headers: {
-            //     "Content-type": "application/json"
-            //   }
-            // });
-            // data = {
-            //   doc: {
-            //     dataset: JSON.stringify(this.dataset.raw)
-            //   }
-            // };
-            // await this.$axios.post(`/api/testing/_update/${id}`, data, {
-            //   headers: {
-            //     "Content-type": "application/json"
-            //   }
-            // });
-            // data = {
-            //   doc: {
-            //     dataset: {
-            //       latih: JSON.stringify(this.dataset.latih)
-            //     }
-            //   }
-            // };
-            // console.log(data);
-            // await this.$axios.post(`/api/testing/_update/${id}`, data);
-            // data = {
-            //   doc: {
-            //     dataset: {
-            //       uji: JSON.stringify(this.dataset.uji)
-            //     }
-            //   }
-            // };
-            // console.log(data);
-            // await this.$axios.post(`/api/testing/_update/${id}`, data);
-            // await this.$confirm({
-            //   title: "🥳 Sukses",
-            //   message: "Pengujian berhasil disimpan",
-            //   button: {
-            //     yes: "Ok"
-            //   }
-            // });
-            // this.stepStatus = [false, false, false, false];
-            // this.processedSteps = [];
-            // this.tampilkanData = false;
-            // this.prosesHitung = false;
+                await this.$axios
+                  .post(`/api/_bulk`, `${bulk_data}\n`, {
+                    headers: {
+                      "Content-type": "application/json"
+                    }
+                  })
+                  .catch(() => {
+                    this.prosesHitung = false;
+                    this.$confirm({
+                      title: "😡 GAGAL",
+                      message:
+                        "Pengujian gagal disimpan, silahkan simpan ulang",
+                      button: {
+                        yes: "Ok"
+                      }
+                    });
+                  });
+
+                this.proses = j;
+              }
+            }
+
+            await this.$confirm({
+              title: "🥳 Sukses",
+              message: "Pengujian berhasil disimpan",
+              button: {
+                yes: "Ok"
+              }
+            });
+            this.stepStatus = [false, false, false, false];
+            this.processedSteps = [];
+            this.tampilkanData = false;
+            this.prosesHitung = false;
           }
         }
       });

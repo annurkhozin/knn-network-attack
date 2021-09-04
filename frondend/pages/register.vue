@@ -10,14 +10,6 @@
       <div class="wrap-login100">
         <b-col class="col-7 d-none d-md-block d-md-block">
           <LoginVector class="login-vector" />
-          <div class="text-center div-menu">
-            <nuxt-link to="/" class="link-menu">
-              Home
-            </nuxt-link>
-            <nuxt-link to="about" class="link-menu">
-              About
-            </nuxt-link>
-          </div>
         </b-col>
         <b-col class="col-12 col-sm-8 col-md-5 offset-sm-2 offset-md-0">
           <div
