@@ -3,10 +3,7 @@
     <Breadcrumb :items="breadcrumb" />
     <b-card :class="this.$store.state.darkMode ? 'bg-dark' : ''">
       <b-row class="mb-4 ml-1">
-        <b-button
-          v-b-modal.modal-prevent-closing
-          variant="success shadow"
-          size="sm"
+        <b-button v-b-modal.modal-pengguna variant="success shadow" size="sm"
           ><b-icon-plus scale="1.3"></b-icon-plus> &nbsp;Tambah baru</b-button
         >
       </b-row>
@@ -48,7 +45,7 @@
           :key="index"
           cols="12"
           sm="6"
-          md="4"
+          md="3"
           class="pr-2 pl-2"
         >
           <div class="list-item">
@@ -153,7 +150,7 @@
     </b-card>
 
     <b-modal
-      id="modal-prevent-closing"
+      id="modal-pengguna"
       ref="modal"
       size="sm"
       title="Data Pengguna"
@@ -338,7 +335,7 @@ export default {
                   yes: "Ok"
                 },
                 callback: confirm => {
-                  this.$bvModal.hide("modal-prevent-closing");
+                  this.$bvModal.hide("modal-pengguna");
                   this.getUsers();
                 }
               });
@@ -369,7 +366,7 @@ export default {
                   yes: "Ok"
                 },
                 callback: confirm => {
-                  this.$bvModal.hide("modal-prevent-closing");
+                  this.$bvModal.hide("modal-pengguna");
                   this.getUsers();
                 }
               });
@@ -391,6 +388,7 @@ export default {
     },
     base64File: function() {
       const file = document.querySelector("input[type=file]").files[0];
+      console.log(file);
       const reader = new FileReader();
 
       reader.onloadend = () => {
@@ -451,7 +449,7 @@ export default {
         fullname: user.fullname,
         username: user.username
       };
-      this.$bvModal.show("modal-prevent-closing");
+      this.$bvModal.show("modal-pengguna");
     },
     async hapusData(id, name) {
       await this.$confirm({

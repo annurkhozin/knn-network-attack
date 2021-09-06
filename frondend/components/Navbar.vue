@@ -126,7 +126,7 @@
       </b-navbar-nav>
     </b-navbar>
     <b-modal
-      id="modal-prevent-closing"
+      id="modal-profile"
       ref="modal"
       size="sm"
       title="Data Pengguna"
@@ -290,7 +290,7 @@ export default {
         fullname: this.$store.state.user.fullname,
         username: this.$store.state.user.username
       };
-      this.$bvModal.show("modal-prevent-closing");
+      this.$bvModal.show("modal-profile");
     },
     resetModal() {
       this.form = {};
@@ -346,7 +346,7 @@ export default {
                   yes: "Ok"
                 },
                 callback: confirm => {
-                  this.$bvModal.hide("modal-prevent-closing");
+                  this.$bvModal.hide("modal-profile");
                   this.getProfile();
                 }
               });
