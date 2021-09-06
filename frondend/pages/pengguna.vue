@@ -535,7 +535,6 @@ export default {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -moz-text-fill-color: transparent;
-  text-fill-color: transparent;
 }
 
 .text-sm {
